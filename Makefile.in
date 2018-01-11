@@ -1,0 +1,309 @@
+#  Copyright (c) 1994, 1995, 1996
+# 	The Regents of the University of California.  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that: (1) source code distributions
+#  retain the above copyright notice and this paragraph in its entirety, (2)
+#  distributions including binary code include the above copyright notice and
+#  this paragraph in its entirety in the documentation or other materials
+#  provided with the distribution, and (3) all advertising materials mentioning
+#  features or use of this software display the following acknowledgement:
+#  ``This product includes software developed by the University of California,
+#  Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
+#  the University nor the names of its contributors may be used to endorse
+#  or promote products derived from this software without specific prior
+#  written permission.
+#  THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+#
+# @(#) $Header: /usr/cvs/ns/ns-src/Makefile.in,v 1.34 1998/11/19 06:36:37 dmaltz Exp $ (LBL)
+#
+# Various configurable paths (remember to edit Makefile.in, not Makefile)
+#
+
+# Top level hierarchy
+prefix	= @prefix@
+# Pathname of directory to install the binary
+BINDEST	= @prefix@/bin
+# Pathname of directory to install the man page
+MANDEST	= @prefix@/man
+
+CC	= @CC@
+CPP	= @CXX@
+CCOPT	= @V_CCOPT@
+
+STATIC	= @V_STATIC@
+DEFINE	= -DNO_TK @V_DEFINE@ @V_DEFINES@ \
+          -Dabort=_ABORT \
+          -DMONARCH -DDSR_CACHE_STATS \
+# -DDEBUG=4 \
+# -DMEMDEBUG_SIMULATIONS  \
+
+TCL2C	= @V_TCL2CPP@
+
+INCLUDES = \
+	-I. -I./cmu -I./cmu/dsr -I./cmu/dsdv -I./cmu/cbrp\
+	@V_INCLUDE_X11@ \
+	@V_INCLUDES@
+
+LIB	= \
+	@V_LIBS@ \
+	@V_LIB_X11@ \
+	@V_LIB@ \
+	-lm -ldl @LIBS@
+
+INSTALL	= @INSTALL@
+MKDEP	= makedepend
+RANLIB	= @V_RANLIB@
+@V_SHELL@
+
+BLANK	= # make a blank space.  DO NOT add anything to this line
+AR	= ar rc $(BLANK)
+LINK	= $(CPP)
+LDFLAGS	=
+LDOUT	= -o $(BLANK)
+PERL	= perl
+RM	= rm -f
+TCLSH	= ../tcl8.0/unix/tclsh
+
+BFLAGS	= $(INCLUDES) $(DEFINE)
+CFLAGS	= $(INCLUDES) $(DEFINE) $(CCOPT) -Wall
+
+# Explicitly define compilation rules since SunOS 4's make doesn't like gcc.
+# Also, gcc does not remove the .o before forking 'as', which can be a
+# problem if you don't own the file but can write to the directory.
+.SUFFIXES: .cc	# $(.SUFFIXES)
+
+.cc.o:
+	@rm -f $@
+	$(CPP) -c $(CFLAGS) -o $@ $*.cc
+
+.c.o:
+	@rm -f $@
+	$(CC) -c $(CFLAGS) -o $@ $*.c
+
+
+GEN_DIR	= gen/
+LIB_DIR	= lib/
+NS	= ns
+NSX	= nsx
+
+
+# WIN32: uncomment the following line to include specific make for VC++
+# !include <makefile.win>
+
+
+OBJ_CC = \
+	random.o rng.o ranvar.o misc.o timer-handler.o \
+	scheduler.o object.o \
+	packet.o ip.o route.o connector.o ttl.o \
+	trace.o trace-ip.o \
+	classifier.o classifier-addr.o classifier-flow.o classifier-hash.o \
+	classifier-mcast.o classifier-mpath.o replicator.o \
+	cbr.o traffictrace.o pareto.o expoo.o telnet.o tcplib-telnet.o \
+	agent.o message.o udp.o session-rtp.o rtp.o rtcp.o ivs.o \
+	tcp.o tcp-sink.o tcp-reno.o tcp-newreno.o \
+	tcp-vegas.o tcp-rbp.o tcp-full.o \
+	scoreboard.o tcp-sack1.o tcp-fack.o \
+	tcp-asym.o tcp-asym-sink.o tcp-int.o chost.o nilist.o tcp-fs.o \
+	integrator.o queue-monitor.o flowmon.o loss-monitor.o \
+	queue.o drop-tail.o red.o \
+	semantic-packetqueue.o semantic-red.o ack-recons.o \
+	sfq.o fq.o drr.o cbq.o \
+	hackloss.o errmodel.o \
+	delay.o \
+	dynalink.o rtProtoDV.o net-interface.o \
+	ctrMcast.o prune.o srm.o \
+	sessionhelper.o delaymodel.o srm-ssm.o \
+	$(LIB_DIR)int.Vec.o $(LIB_DIR)int.RVec.o \
+	$(LIB_DIR)dmalloc_support.o \
+	net.o net-ip.o tap.o
+
+###########################################################################
+#
+# Valid DSR caches: mobicache, linkcache
+#
+DSR_CACHE = mobicache
+
+# All the files for each routing protocol we add should go on their
+# own set of lines.  DO NOT add or change the common lines.
+OBJ_CMU = \
+	cmu/channel.o cmu/ll.o cmu/mac.o cmu/modulation.o   \
+	cmu/arp.o cmu/node.o \
+	cmu/net-if.o cmu/sharedmedia.o \
+	cmu/antenna.o cmu/omni-antenna.o \
+	cmu/propagation.o cmu/tworayground.o \
+	cmu/dem.o cmu/topography.o \
+	cmu/mac-802_3.o cmu/mac-802_11.o cmu/mac-timers.o \
+	cmu/priqueue.o cmu/rtqueue.o cmu/rttable.o \
+	cmu/god.o cmu/cmu-trace.o \
+	\
+	cmu/tora/tora.o cmu/tora/tora_api.o cmu/tora/tora_io.o \
+	cmu/tora/tora_neighbor.o cmu/tora/tora_dest.o \
+	cmu/tora/tora_logs.o \
+	\
+	cmu/imep/imep.o cmu/imep/imep_api.o cmu/imep/imep_rt.o \
+	cmu/imep/imep_io.o cmu/imep/imep_util.o cmu/imep/imep_timers.o \
+	cmu/imep/rxmit_queue.o cmu/imep/dest_queue.o \
+	\
+	cmu/dsr/path.o cmu/dsr/routecache.o cmu/dsr/requesttable.o \
+	cmu/dsr/dsragent.o cmu/dsr/hdr_sr.o  \
+	cmu/dsr/$(DSR_CACHE).o \
+	\
+	cmu/dsdv/rtable.o cmu/dsdv/dsdv.o \
+	cmu/aodv/aodv.o cmu/aodv/aodv_logs.o \
+
+OBJ_CBRP = \
+	cmu/cbrp/cbrpagent.o cmu/cbrp/ntable.o cmu/cbrp/hdr_cbrp.o
+######################################################################
+
+OBJ_C = \
+	inet.o
+
+OBJ_COMPAT = $(OBJ_GETOPT) win32.o
+#XXX compat/win32x.o compat/tkConsole.o
+
+OBJ_NAM = \
+	nam/animation.o \
+	nam/nam-drop.o \
+	nam/nam-edge.o \
+	nam/nam-node.o \
+	nam/nam-packet.o \
+	nam/nam-queue.o \
+	nam/nam-trace.o \
+	nam/paint.o \
+	nam/state.o \
+	nam/transform.o \
+	nam/netview.o \
+	nam/netmodel.o
+
+OBJ_GEN = $(GEN_DIR)version.o $(GEN_DIR)ns_tcl.o
+
+SRC =	$(OBJ_C:.o=.c) $(OBJ_CC:.o=.cc) $(OBJ_NAM:.o=.cc) $(OBJ_CMU:.o=.cc) $(OBJ_CBRP:.o=.cc)\
+	tclAppInit.cc tkAppInit.cc
+
+OBJ =	$(OBJ_C) $(OBJ_CC) $(OBJ_GEN) $(OBJ_COMPAT) $(OBJ_CMU) $(OBJ_CBRP)
+HDR =   agent.h config.h data-source.h integrator.h link.h node.h \
+	object.h packet.h random.h scheduler.h scoreboard.h tcp.h trace.h \
+	tcp-sink.h tcp-fack.h tcp-int.h chost.h drop-tail.h red.h \
+	queue-monitor.h semantic-packetqueue.h ack-recons.h \
+	cbr.h rtp.h cbr.h classifier.h connector.h ip.h \
+	delay.h \
+	snoop.h ll.h mac.h mac-multihop.h mac-csma.h mac-802_11.h \
+	rtProtoDV.h ctrMcast.h prune.h ranvar.h delaymodel.h timers.h \
+	srm-ssm.h mem-debug.h
+
+CLEANFILES = ns nsx ns.dyn $(OBJ) $(OBJ_NAM) tclAppInit.o \
+	$(GEN_DIR)* core core.ns core.nsx
+
+$(NS): $(OBJ) tclAppInit.o
+	$(LINK) $(STATIC) $(LDFLAGS) $(LDOUT)$@ \
+		tclAppInit.o $(OBJ) $(LIB)
+
+$(NSX): $(OBJ) tkAppInit.o $(OBJ_NAM)
+	$(LINK) $(STATIC) $(LDFLAGS) $(LDOUT)$@ \
+		tkAppInit.o $(OBJ) $(OBJ_NAM) $(LIB)
+
+ns.dyn: $(OBJ) tclAppInit.o
+	$(LINK) $(LDFLAGS) -o $@ \
+		tclAppInit.o $(OBJ) $(LIB)
+
+PURIFY	= purify -cache-dir=/tmp
+ns-pure: $(OBJ) tclAppInit.o
+	$(PURIFY) $(LINK) $(STATIC) $(LDFLAGS) -o $@ \
+		tclAppInit.o $(OBJ) $(LIB)
+
+NS_TCL_LIB = \
+	tcl/lib/ns-compat.tcl \
+	tcl/lib/ns-default.tcl \
+	tcl/lib/ns-lib.tcl \
+	tcl/lib/ns-link.tcl \
+	tcl/lib/ns-node.tcl \
+	tcl/lib/ns-packet.tcl \
+	tcl/lib/ns-queue.tcl \
+	tcl/lib/ns-source.tcl \
+	tcl/lib/ns-nam.tcl \
+	tcl/lib/ns-trace.tcl \
+	tcl/lib/ns-agent.tcl \
+	tcl/lib/ns-random.tcl \
+	tcl/lib/ns-namsupp.tcl \
+	tcl/rtp/session-rtp.tcl \
+	tcl/rtglib/dynamics.tcl \
+	tcl/rtglib/route-proto.tcl \
+        tcl/interface/ns-iface.tcl \
+        tcl/mcast/ns-mcast.tcl \
+        tcl/mcast/McastProto.tcl \
+        tcl/mcast/DM.tcl \
+	tcl/mcast/detailedDM.tcl \
+        tcl/mcast/dynamicDM.tcl \
+        tcl/mcast/pimDM.tcl \
+	tcl/mcast/srm.tcl \
+	tcl/mcast/srm-adaptive.tcl \
+	tcl/mcast/srm-ssm.tcl \
+	tcl/mcast/timer.tcl \
+	tcl/mcast/McastMonitor.tcl \
+        tcl/ctr-mcast/CtrMcast.tcl \
+        tcl/ctr-mcast/CtrMcastComp.tcl \
+        tcl/ctr-mcast/CtrRPComp.tcl \
+        tcl/pim/pim-init.tcl \
+        tcl/pim/pim-messagers.tcl \
+        tcl/pim/pim-mfc.tcl \
+        tcl/pim/pim-mrt.tcl \
+        tcl/pim/pim-recvr.tcl \
+        tcl/pim/pim-sender.tcl \
+        tcl/pim/pim-vifs.tcl \
+	tcl/session/session.tcl \
+	tcl/lib/ns-route.tcl
+
+$(GEN_DIR)ns_tcl.cc: $(NS_TCL_LIB)
+	if [ ! -x $(TCLSH) ] ; \
+	then echo "$(TCLSH) not found..."; rm -rf $@ ; exit; fi ; \
+	$(TCLSH) bin/tcl-expand.tcl tcl/lib/ns-lib.tcl | $(TCL2C) et_ns_lib > $@
+
+$(GEN_DIR)version.c: VERSION
+	$(RM) $@
+	$(PERL) bin/printver.pl "char version_string[] = " < VERSION > $@
+#	cat VERSION | sed 's/.*/char version_string[] = "&";/' > $@
+
+
+install: force
+	$(INSTALL) -m 555 -o bin -g bin ns $(DESTDIR)$(BINDEST)
+
+install-man: force
+	$(INSTALL) -m 444 -o bin -g bin ns.1 $(DESTDIR)$(MANDEST)/man1
+
+clean:
+	$(RM) $(CLEANFILES)
+
+distclean:
+	$(RM) $(CLEANFILES) Makefile config.cache config.log config.status \
+	    gnuc.h os-proto.h
+
+tags:	force
+	ctags -wtd *.cc *.h ../Tcl/*.cc ../Tcl/*.h
+
+TAGS:	force
+	etags *.cc *.h ../Tcl/*.cc ../Tcl/*.h
+
+depend: $(SRC)
+	$(MKDEP) $(CFLAGS) -I/usr/include/g++ $(SRC)
+
+srctar:
+	@cwd=`pwd` ; dir=`basename $$cwd` ; \
+	    name=ns-`cat VERSION | tr A-Z a-z` ; \
+	    tar=ns-src-`cat VERSION`.tar.gz ; \
+	    list="" ; \
+	    for i in `cat FILES` ; do list="$$list $$name/$$i" ; done; \
+	    echo \
+	    "(rm -f $$tar; cd .. ; ln -s $$dir $$name)" ; \
+	     (rm -f $$tar; cd .. ; ln -s $$dir $$name) ; \
+	    echo \
+	    "(cd .. ; tar cfh $$tar [lots of files])" ; \
+	     (cd .. ; tar cfh - $$list) | gzip -c > $$tar ; \
+	    echo \
+	    "rm ../$$name; chmod 444 $$tar" ;  \
+	     rm ../$$name; chmod 444 $$tar
+
+force:
+
